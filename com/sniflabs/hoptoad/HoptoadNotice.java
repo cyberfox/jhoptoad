@@ -1,4 +1,3 @@
-
 package com.sniflabs.hoptoad;
 
 import java.io.BufferedReader;
@@ -12,7 +11,7 @@ import java.util.Map;
 
 /**
  * <strong>HoptoadNotice:</strong><br/>
- * A Java wrapper for hoptoad error reporting application, because 
+ * A Java wrapper for hoptoad error reporting application, because
  * <em>java guys need access to cool error reporting too!!</em><br/>
  * <br/>
  * <strong>Does not have any external requirements!</strong> <br/>
@@ -20,31 +19,31 @@ import java.util.Map;
  * <strong>Sample use:</strong>
  * <code><pre>
  * catch (Exception exp) {
- *   HoptoadNotice notice = 
- *   	new HoptoadNotice("fff9de2222222e156015fb875844de43",exp);
+ *   HoptoadNotice notice =
+ *     new HoptoadNotice("fff9de2222222e156015fb875844de43",exp);
  *   notice.postData(true);
  * }
  * </pre>
  * </code>
  * Minor alterations by Morgan Schweers, to remove yaml library requirementm
  * and add an inline test.
- * 
- * @see <a href="http://sourceforge.net/projects/yamlbeans/">yamlbeans</a> 
+ *
+ * @see <a href="http://sourceforge.net/projects/yamlbeans/">yamlbeans</a>
  * @author Noah Paessel (noah@sniflabs.com)
  *
  * @version 0.1.1 (may be quite flakey!)
  */
 public class HoptoadNotice {
-	public static final String	HOPTOAD_URL="http://hoptoadapp.com/notices/";
+  public static final String HOPTOAD_URL="http://hoptoadapp.com/notices/";
 
-	private String 				api_key;
-	private String 				error_message;
-	private String				error_class;
+  private String         api_key;
+  private String         error_message;
+  private String        error_class;
 
-	private ArrayList<String>		backtrace;
-	private Map<String, String>		environment;
+  private ArrayList<String>    backtrace;
+  private Map<String, String>    environment;
 
-	public static void main(String[] args) {
+  public static void main(String[] args) {
     try {
       deepException();
     } catch(Exception e) {
@@ -94,53 +93,53 @@ public class HoptoadNotice {
   }
 
   /**
-	 * default constructor. Doesn't help anyone, but is required for bean-ness.
-	 * initializes data structures.
-	 */
-	public HoptoadNotice() {
-		super();
-		api_key = "invalid api key";
-		backtrace = new ArrayList<String>();
+   * default constructor. Doesn't help anyone, but is required for bean-ness.
+   * initializes data structures.
+   */
+  public HoptoadNotice() {
+    super();
+    api_key = "invalid api key";
+    backtrace = new ArrayList<String>();
 
-		environment = new HashMap<String, String>();
-	}
+    environment = new HashMap<String, String>();
+  }
 
-	/**
-	 * Create a new HoptoadNotice notice for sending to hoptoadapp.com <br>
-	 * <strong>NOTE:</strong> this does not send actually send the notice
-	 * @param key Your HoapToadApp API key.
-	 * @param exception the exception you want to log
-	 * 
-	 */
-	public HoptoadNotice(String key, Throwable exception) {
-		this();
-		api_key = key;
-		error_message = exception.getMessage();
-		if (null == error_message || error_message.length() == 0) {
-			error_message = exception.toString();
-		}
-		error_class   = exception.getClass().getSimpleName();
-		environment   = System.getenv();
-		
-		for(StackTraceElement element : exception.getStackTrace()) {
-			backtrace.add(String.format("%s:%d  %s %s", 
-					element.getFileName(), 
-					element.getLineNumber(), 
-					element.getClassName(), 
-					element.getMethodName()));
-		}
-	}
-	
+  /**
+   * Create a new HoptoadNotice notice for sending to hoptoadapp.com <br>
+   * <strong>NOTE:</strong> this does not send actually send the notice
+   * @param key Your HoapToadApp API key.
+   * @param exception the exception you want to log
+   *
+   */
+  public HoptoadNotice(String key, Throwable exception) {
+    this();
+    api_key = key;
+    error_message = exception.getMessage();
+    if (null == error_message || error_message.length() == 0) {
+      error_message = exception.toString();
+    }
+    error_class   = exception.getClass().getSimpleName();
+    environment   = System.getenv();
 
-	/**
-	 * return the YAML string for this notice.<br/>
+    for(StackTraceElement element : exception.getStackTrace()) {
+      backtrace.add(String.format("%s:%d  %s %s",
+          element.getFileName(),
+          element.getLineNumber(),
+          element.getClassName(),
+          element.getMethodName()));
+    }
+  }
+
+
+  /**
+   * return the YAML string for this notice.<br/>
    *
    * mrs - I generally dislike external requirements, so I faked up this
    * super-simple YAML generator, so I could embed this in my app.
    *
-	 * @return the YAML for the HopToadNotice datastructure
-	 */
-	public String toYaml() {
+   * @return the YAML for the HopToadNotice datastructure
+   */
+  public String toYaml() {
     StringBuffer sb = new StringBuffer("--- \nnotice: \n");
     sb.append("  api_key: ").append(api_key).append("\n");
     sb.append(dumpBacktrace("  "));
@@ -150,16 +149,16 @@ public class HoptoadNotice {
     sb.append("  request: {}\n");
     sb.append("  session: {}\n");
 
-		return sb.toString();
-	}
+    return sb.toString();
+  }
 
   /**
-	 * Send the data to the HopToadApp.
-	 * Sets HTTP headers, and then sends the YAML file.
-	 * Optionally prints out the YAML text if you pass in true for debug.
-	 * @param debug set to true to see the YAML sent, and the XML server results.
-	 */
-	public void postData(boolean debug) {
+   * Send the data to the HopToadApp.
+   * Sets HTTP headers, and then sends the YAML file.
+   * Optionally prints out the YAML text if you pass in true for debug.
+   * @param debug set to true to see the YAML sent, and the XML server results.
+   */
+  public void postData(boolean debug) {
     try {
       // establish connection to hoptoad
       URLConnection conn = new URL(HOPTOAD_URL).openConnection();
@@ -193,5 +192,5 @@ public class HoptoadNotice {
       e.printStackTrace();
       System.err.printf("error communicating with HopToadApp: %s\n", e);
     }
-	}
+  }
 }
