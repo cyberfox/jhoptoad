@@ -15,11 +15,8 @@ import java.util.Map;
  * A Java wrapper for hoptoad error reporting application, because 
  * <em>java guys need access to cool error reporting too!!</em><br/>
  * <br/>
- * <strong>requires:</strong> <br/>
- * <a href="http://sourceforge.net/projects/yamlbeans/">yamlbeans</a> from
- * http://sourceforge.net/projects/yamlbeans/ <br/>
- * <br/>
- * 
+ * <strong>Does not have any external requirements!</strong> <br/>
+ *
  * <strong>Sample use:</strong>
  * <code><pre>
  * catch (Exception exp) {
@@ -29,13 +26,15 @@ import java.util.Map;
  * }
  * </pre>
  * </code>
+ * Minor alterations by Morgan Schweers, to remove yaml library requirementm
+ * and add an inline test.
  * 
  * @see <a href="http://sourceforge.net/projects/yamlbeans/">yamlbeans</a> 
  * @author Noah Paessel (noah@sniflabs.com)
- * @version 0.1 (may be quite flakey!)
+ *
+ * @version 0.1.1 (may be quite flakey!)
  */
 public class HoptoadNotice {
-//	public static final String	HOPTOAD_URL="http://fox.vulpine.com:9889";
 	public static final String	HOPTOAD_URL="http://hoptoadapp.com/notices/";
 
 	private String 				api_key;
@@ -47,21 +46,38 @@ public class HoptoadNotice {
 
 	public static void main(String[] args) {
     try {
-      zarf();
+      deepException();
     } catch(Exception e) {
-      HoptoadNotice h = new HoptoadNotice("foo", e);
+      HoptoadNotice h = new HoptoadNotice(args[0], e);
       h.postData(true);
     }
   }
 
-  private static void zarf() {
-    throw new NullPointerException("Testing 2");
+  private static void deepException() {
+    Runnable r = new Runnable() {
+
+      public void run() {
+        throw new NullPointerException("Testing 1234");
+      }
+    };
+    r.run();
+  }
+
+  private String yamlQuote(String s) {
+    return s.replaceAll("\n", "\\\\\\\\n").replaceAll("\"", "\\\"");
   }
 
   private StringBuffer dumpEnvironment(String prefix) {
     StringBuffer rval = new StringBuffer(prefix + "environment: \n");
     for(Map.Entry<String, String> pair : environment.entrySet()) {
       rval.append(prefix).append("  ").append(pair.getKey()).append(": ").append(pair.getValue()).append('\n');
+    }
+    for(Map.Entry<Object, Object> pair : System.getProperties().entrySet()) {
+      rval.append(prefix).append("  ");
+      rval.append(pair.getKey().toString());
+      rval.append(": \"");
+      rval.append(yamlQuote(pair.getValue().toString()));
+      rval.append("\"\n");
     }
 
     return rval;
@@ -156,10 +172,11 @@ public class HoptoadNotice {
       conn.setDoOutput(true);
 
       OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+      String yaml = toYaml();
       if (debug) {
-        System.out.println(toYaml());
+        System.out.println(yaml);
       }
-      wr.write(toYaml());
+      wr.write(yaml);
       wr.flush();
       wr.close();
 
