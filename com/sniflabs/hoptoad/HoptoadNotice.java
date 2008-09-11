@@ -2,7 +2,6 @@
 package com.sniflabs.hoptoad;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.URL;
@@ -10,9 +9,6 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
-import net.sourceforge.yamlbeans.YamlConfig;
-import net.sourceforge.yamlbeans.YamlWriter;
 
 /**
  * <strong>HoptoadNotice:</strong><br/>
@@ -39,18 +35,16 @@ import net.sourceforge.yamlbeans.YamlWriter;
  * @version 0.1 (may be quite flakey!)
  */
 public class HoptoadNotice {
-	public static final String	HOPTOAD_URL="http://fox.vulpine.com:9889";
-//	public static final String	HOPTOAD_URL="http://hoptoadapp.com/notices/";
+//	public static final String	HOPTOAD_URL="http://fox.vulpine.com:9889";
+	public static final String	HOPTOAD_URL="http://hoptoadapp.com/notices/";
 
-	public String 				api_key;
-	public String 				error_message;
-	public String				error_class;
-	
-	public ArrayList<String>		backtrace;
-	public HashMap<String, String>	session;
-	public HashMap<String, String>	request;
-	public Map<String, String>		environment;	
-	
+	private String 				api_key;
+	private String 				error_message;
+	private String				error_class;
+
+	private ArrayList<String>		backtrace;
+	private Map<String, String>		environment;
+
 	public static void main(String[] args) {
     try {
       zarf();
@@ -64,20 +58,20 @@ public class HoptoadNotice {
     throw new NullPointerException("Testing 2");
   }
 
-  private StringBuffer dumpEnvironment() {
-    StringBuffer rval = new StringBuffer("  environment:\n");
+  private StringBuffer dumpEnvironment(String prefix) {
+    StringBuffer rval = new StringBuffer(prefix + "environment: \n");
     for(Map.Entry<String, String> pair : environment.entrySet()) {
-      rval.append("    ").append(pair.getKey()).append(": ").append(pair.getValue()).append('\n');
+      rval.append(prefix).append("  ").append(pair.getKey()).append(": ").append(pair.getValue()).append('\n');
     }
 
     return rval;
   }
 
-  private StringBuffer dumpBacktrace() {
+  private StringBuffer dumpBacktrace(String prefix) {
     StringBuffer rval = new StringBuffer();
-    rval.append("  backtrace:\n");
+    rval.append(prefix).append("backtrace: \n");
     for(String entry : backtrace) {
-      rval.append("    - ").append(entry).append("\n");
+      rval.append(prefix).append("- ").append(entry).append("\n");
     }
 
     return rval;
@@ -89,14 +83,11 @@ public class HoptoadNotice {
 	 */
 	public HoptoadNotice() {
 		super();
-		this.api_key = "invalid key";
+		api_key = "invalid api key";
 		backtrace = new ArrayList<String>();
-		
-		session = new HashMap<String, String>();
-		request = new HashMap<String, String>();
+
 		environment = new HashMap<String, String>();
 	}
-	
 
 	/**
 	 * Create a new HoptoadNotice notice for sending to hoptoadapp.com <br>
@@ -109,7 +100,7 @@ public class HoptoadNotice {
 		this();
 		api_key = key;
 		error_message = exception.getMessage();
-		if (null == error_message || error_message.equals("")) {
+		if (null == error_message || error_message.length() == 0) {
 			error_message = exception.toString();
 		}
 		error_class   = exception.getClass().getSimpleName();
@@ -127,22 +118,17 @@ public class HoptoadNotice {
 
 	/**
 	 * return the YAML string for this notice.<br/>
-	 * <strong>NOTE:</strong> HoptoadNotice reuqires a java YAML library called
-	 * yamlbeans.  you can get it from http://sourceforge.net/projects/yamlbeans/
-	 * <strong>NOTE:</strong> It seems like hoptoad hates the "!" thingies that
-	 * this library creates. I don't feel like understanding what this is all about,
-	 * so I replaced the "!" thingies and class names with NOTHING. Huh.
-	 * see https://sourceforge.net/projects/yamlbeans/
+   *
+   * mrs - I generally dislike external requirements, so I faked up this
+   * super-simple YAML generator, so I could embed this in my app.
+   *
 	 * @return the YAML for the HopToadNotice datastructure
 	 */
 	public String toYaml() {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		HashMap<String,Object> values = new HashMap<String, Object>();
-
-    StringBuffer sb = new StringBuffer("---\nnotice:\n");
+    StringBuffer sb = new StringBuffer("--- \nnotice: \n");
     sb.append("  api_key: ").append(api_key).append("\n");
-    sb.append(dumpBacktrace());
-    sb.append(dumpEnvironment());
+    sb.append(dumpBacktrace("  "));
+    sb.append(dumpEnvironment("  "));
     sb.append("  error_class: ").append(error_class).append('\n');
     sb.append("  error_message: ").append(error_message).append('\n');
     sb.append("  request: {}\n");
